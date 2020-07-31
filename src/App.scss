@@ -1,0 +1,17 @@
+.MuiContainer-root h2 {
+  text-align: center;
+}
+.MuiPaper-root {
+  display: flex;
+  flex-direction: row;
+
+  .MuiCard-root {
+    flex: 1;
+  }
+}
+
+.userInput,
+.userOutput {
+  display: flex;
+  flex-direction: column;
+}
