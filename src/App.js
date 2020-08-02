@@ -9,12 +9,13 @@ import {
   FormControl,
   TextField,
   Paper,
+  InputAdornment,
+  Button,
 } from "@material-ui/core";
 import data from "./depcalc.json";
 import numberFormat from "./utils";
 import "./App.scss";
 import NumberFormat from "react-number-format";
-import { light } from "@material-ui/core/styles/createPalette";
 
 const formatDeposit = (dep) => {
   dep.param.sort((a, b) => a.period_from - b.period_from);
@@ -24,14 +25,15 @@ const formatDeposit = (dep) => {
   return dep;
 };
 
+const emptyUserInput = { summ: "", term: "" };
 function App() {
   const deposits = data.deposits;
 
   const [selected, setSelected] = React.useState(formatDeposit(deposits[0]));
-  const [userInput, setUserInput] = React.useState({ summ: "", term: "" });
+  const [userInput, setUserInput] = React.useState(emptyUserInput);
   const [userOutput, setUserOutput] = React.useState({
-    perc: null,
-    income: null,
+    perc: "",
+    income: "",
   });
 
   const handleSelectChange = (event) => {
@@ -39,10 +41,49 @@ function App() {
   };
 
   const handleInputChange = (name, event) => {
-    const value = event.target.value.replace(/,/g, "");
-    const newValue = { ...userOutput };
-    newValue[name] = event.target.value;
+    //debugger;
+    const value =
+      name === "summ"
+        ? event.target.value.replace(/,/g, "")
+        : event.target.value;
+    const newValue = { ...userInput };
+    newValue[name] = parseInt(value);
     setUserInput(newValue);
+  };
+
+  const calculateOutput = () => {
+    let ifError = false;
+    if (userInput.summ !== " " && userInput.term !== " ") {
+      ifError = true;
+      // return;
+    }
+
+    let summsAndRate;
+    for (let i = 0; i < selected.param.length; i++) {
+      const el = selected.param;
+
+      const interval = [
+        el[i].period_from,
+        el[i + 1] ? el[i + 1].period_from : Infinity,
+      ];
+
+      if (userInput.term >= interval[0] && userInput.term < interval[1]) {
+        summsAndRate = selected.param[i].summs_and_rate;
+      }
+    }
+    let rate;
+    for (let i = 0; i < summsAndRate.length - 1; i++) {
+      if (
+        summsAndRate[i].summ_from <= userInput.summ &&
+        summsAndRate[i + 1].summ_from > userInput.summ
+      ) {
+        rate = summsAndRate[i].rate;
+      }
+    }
+
+    const income = (userInput.summ * userInput.term * rate) / (365 * 100);
+    setUserInput(emptyUserInput);
+    setUserOutput({ perc: rate, income: income });
   };
 
   const sumLabel = `минимальная сумма ${numberFormat(
@@ -56,8 +97,9 @@ function App() {
       ? " день"
       : minTerm.slice(-1) === ("2" || "3" || "4")
       ? " дня"
-      : "дней"
+      : " дней"
   } `;
+
   return (
     <Container>
       <h2>Депозитный калькулятор</h2>
@@ -67,32 +109,42 @@ function App() {
             {renderSelect(deposits, handleSelectChange, selected)}
             <NumberFormat
               customInput={TextField}
+              // error={}
               label="сумма"
               thousandSeparator={true}
               value={userInput.summ}
               helperText={sumLabel}
+              InputProps={{
+                endAdornment: <InputAdornment position="end">₽</InputAdornment>,
+              }}
               onChange={handleInputChange.bind(null, "summ")}
             />
 
             <TextField
-              required
               type="number"
-              label="срок вклада"
+              label="срок вклада в днях"
               value={userInput.term}
               onChange={handleInputChange.bind(null, "term")}
               helperText={termLabel}
             />
+            <Button
+              variant="contained"
+              color="primary"
+              onClick={calculateOutput}
+            >
+              рассчитать
+            </Button>
           </CardContent>
         </Card>
         <Card>
           <CardContent className="userOutput">
             <div>
-              <span> процентная ставка:</span>{" "}
-              <TextField value={userOutput.summ} />
+              <span> процентная ставка:</span>
+              <TextField value={userOutput.perc} />
             </div>
             <div>
               <span> доход:</span>
-              <TextField value={userOutput.summ} />
+              <TextField value={userOutput.income} />
             </div>
           </CardContent>
         </Card>
@@ -107,10 +159,10 @@ function renderSelect(data, handleChange, selected) {
   return (
     <FormControl>
       <InputLabel>тип вклада</InputLabel>
-      <Select value={selected.code} onChange={handleChange}>
+      <Select value={selected} onChange={handleChange}>
         {data.map((el) => {
           return (
-            <MenuItem value={el.code} key={el.code}>
+            <MenuItem value={el} key={el.code}>
               {el.name}
             </MenuItem>
           );
