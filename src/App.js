@@ -8,14 +8,16 @@ import {
   InputLabel,
   FormControl,
   TextField,
-  Paper,
   InputAdornment,
   Button,
 } from "@material-ui/core";
 import data from "./depcalc.json";
-import numberFormat from "./utils";
+import numberFormat, { createPDF } from "./utils";
 import "./App.scss";
 import NumberFormat from "react-number-format";
+import PrintIcon from "@material-ui/icons/Print";
+import "react-toastify/dist/ReactToastify.min.css";
+import { ToastContainer, toast } from "react-toastify";
 
 const formatDeposit = (dep) => {
   dep.param.sort((a, b) => a.period_from - b.period_from);
@@ -25,12 +27,11 @@ const formatDeposit = (dep) => {
   return dep;
 };
 
-const emptyUserInput = { summ: "", term: "" };
 function App() {
   const deposits = data.deposits;
 
   const [selected, setSelected] = React.useState(formatDeposit(deposits[0]));
-  const [userInput, setUserInput] = React.useState(emptyUserInput);
+  const [userInput, setUserInput] = React.useState({ summ: "", term: "" });
   const [userOutput, setUserOutput] = React.useState({
     perc: "",
     income: "",
@@ -41,7 +42,6 @@ function App() {
   };
 
   const handleInputChange = (name, event) => {
-    //debugger;
     const value =
       name === "summ"
         ? event.target.value.replace(/,/g, "")
@@ -52,10 +52,17 @@ function App() {
   };
 
   const calculateOutput = () => {
-    let ifError = false;
-    if (userInput.summ !== " " && userInput.term !== " ") {
-      ifError = true;
-      // return;
+    if (!userInput.summ && !userInput.term) {
+      toast.error("введите данные для расчета!");
+      return;
+    }
+    if (userInput.summ < minSumm) {
+      toast.error(sumLabel);
+      return;
+    }
+    if (userInput.term < minTerm) {
+      toast.error(termLabel);
+      return;
     }
 
     let summsAndRate;
@@ -71,24 +78,32 @@ function App() {
         summsAndRate = selected.param[i].summs_and_rate;
       }
     }
+
     let rate;
-    for (let i = 0; i < summsAndRate.length - 1; i++) {
+    for (let i = 0; i < summsAndRate.length; i++) {
       if (
         summsAndRate[i].summ_from <= userInput.summ &&
-        summsAndRate[i + 1].summ_from > userInput.summ
+        userInput.summ < summsAndRate[i + 1]
+          ? summsAndRate[i + 1].summ_from
+          : Infinity
       ) {
         rate = summsAndRate[i].rate;
       }
     }
 
-    const income = (userInput.summ * userInput.term * rate) / (365 * 100);
-    setUserInput(emptyUserInput);
+    const income = (
+      (userInput.summ * userInput.term * rate) /
+      (365 * 100)
+    ).toFixed(2);
+    // setUserInput(emptyUserInput);
     setUserOutput({ perc: rate, income: income });
   };
 
-  const sumLabel = `минимальная сумма ${numberFormat(
-    selected.param[0].summs_and_rate[0].summ_from
-  )} рублей`;
+  const openPDF = () => {
+    createPDF(selected, userInput, userOutput);
+  };
+  const minSumm = selected.param[0].summs_and_rate[0].summ_from;
+  const sumLabel = `минимальная сумма ${numberFormat(minSumm)} рублей`;
 
   const minTerm = selected.param[0].period_from.toString();
 
@@ -101,54 +116,68 @@ function App() {
   } `;
 
   return (
-    <Container>
+    <Container maxWidth="md">
       <h2>Депозитный калькулятор</h2>
-      <Paper>
-        <Card>
-          <CardContent className="userInput">
-            {renderSelect(deposits, handleSelectChange, selected)}
-            <NumberFormat
-              customInput={TextField}
-              // error={}
-              label="сумма"
-              thousandSeparator={true}
-              value={userInput.summ}
-              helperText={sumLabel}
-              InputProps={{
-                endAdornment: <InputAdornment position="end">₽</InputAdornment>,
-              }}
-              onChange={handleInputChange.bind(null, "summ")}
-            />
+      <ToastContainer
+        position="top-center"
+        autoClose={3000}
+        hideProgressBar={true}
+      />
+      <Card>
+        <CardContent>
+          {renderSelect(deposits, handleSelectChange, selected)}
+          <NumberFormat
+            customInput={TextField}
+            min={0}
+            label="сумма"
+            thousandSeparator={true}
+            decimalSeparator={false}
+            allowNegative={false}
+            value={userInput.summ}
+            helperText={sumLabel}
+            InputProps={{
+              endAdornment: <InputAdornment position="end">₽</InputAdornment>,
+              min: 0,
+            }}
+            onChange={handleInputChange.bind(null, "summ")}
+          />
 
-            <TextField
-              type="number"
-              label="срок вклада в днях"
-              value={userInput.term}
-              onChange={handleInputChange.bind(null, "term")}
-              helperText={termLabel}
-            />
-            <Button
-              variant="contained"
-              color="primary"
-              onClick={calculateOutput}
-            >
-              рассчитать
-            </Button>
-          </CardContent>
-        </Card>
-        <Card>
-          <CardContent className="userOutput">
-            <div>
-              <span> процентная ставка:</span>
-              <TextField value={userOutput.perc} />
+          <NumberFormat
+            customInput={TextField}
+            decimalSeparator={false}
+            allowNegative={false}
+            label="срок вклада в днях"
+            value={userInput.term}
+            onChange={handleInputChange.bind(null, "term")}
+            helperText={termLabel}
+          />
+          <Button variant="contained" color="primary" onClick={calculateOutput}>
+            рассчитать
+          </Button>
+          {!(userOutput.perc === "") & !(userOutput.income === "") ? (
+            <div className="userOutput">
+              <div className="output_perc">
+                <span> процентная ставка:</span>
+                <TextField value={userOutput.perc} /> % годовых
+              </div>
+              <div className="output_income">
+                <span> доход:</span>
+                <TextField value={numberFormat(userOutput.income)} />
+                руб
+              </div>
+
+              <Button
+                variant="contained"
+                color="default"
+                startIcon={<PrintIcon />}
+                onClick={openPDF}
+              >
+                на печать
+              </Button>
             </div>
-            <div>
-              <span> доход:</span>
-              <TextField value={userOutput.income} />
-            </div>
-          </CardContent>
-        </Card>
-      </Paper>
+          ) : null}
+        </CardContent>
+      </Card>
     </Container>
   );
 }
