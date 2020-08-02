@@ -1,0 +1,25 @@
+{
+  "files": {
+    "main.css": "/depositCalculator/static/css/main.627b20cb.chunk.css",
+    "main.js": "/depositCalculator/static/js/main.d5b7ce35.chunk.js",
+    "main.js.map": "/depositCalculator/static/js/main.d5b7ce35.chunk.js.map",
+    "runtime-main.js": "/depositCalculator/static/js/runtime-main.1d31bce7.js",
+    "runtime-main.js.map": "/depositCalculator/static/js/runtime-main.1d31bce7.js.map",
+    "static/css/2.0ec5d33f.chunk.css": "/depositCalculator/static/css/2.0ec5d33f.chunk.css",
+    "static/js/2.c11287f4.chunk.js": "/depositCalculator/static/js/2.c11287f4.chunk.js",
+    "static/js/2.c11287f4.chunk.js.map": "/depositCalculator/static/js/2.c11287f4.chunk.js.map",
+    "index.html": "/depositCalculator/index.html",
+    "precache-manifest.2306c8d050dd4c093f17ed3a08bc5735.js": "/depositCalculator/precache-manifest.2306c8d050dd4c093f17ed3a08bc5735.js",
+    "service-worker.js": "/depositCalculator/service-worker.js",
+    "static/css/2.0ec5d33f.chunk.css.map": "/depositCalculator/static/css/2.0ec5d33f.chunk.css.map",
+    "static/css/main.627b20cb.chunk.css.map": "/depositCalculator/static/css/main.627b20cb.chunk.css.map",
+    "static/js/2.c11287f4.chunk.js.LICENSE.txt": "/depositCalculator/static/js/2.c11287f4.chunk.js.LICENSE.txt"
+  },
+  "entrypoints": [
+    "static/js/runtime-main.1d31bce7.js",
+    "static/css/2.0ec5d33f.chunk.css",
+    "static/js/2.c11287f4.chunk.js",
+    "static/css/main.627b20cb.chunk.css",
+    "static/js/main.d5b7ce35.chunk.js"
+  ]
+}
