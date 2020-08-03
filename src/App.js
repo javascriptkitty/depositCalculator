@@ -81,11 +81,11 @@ function App() {
 
     let rate;
     for (let i = 0; i < summsAndRate.length; i++) {
+      debugger;
       if (
-        summsAndRate[i].summ_from <= userInput.summ &&
-        userInput.summ < summsAndRate[i + 1]
-          ? summsAndRate[i + 1].summ_from
-          : Infinity
+        userInput.summ >= summsAndRate[i].summ_from &&
+        userInput.summ <
+          (summsAndRate[i + 1] ? summsAndRate[i + 1].summ_from : Infinity)
       ) {
         rate = summsAndRate[i].rate;
       }
