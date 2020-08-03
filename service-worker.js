@@ -14,7 +14,7 @@
 importScripts("https://storage.googleapis.com/workbox-cdn/releases/4.3.1/workbox-sw.js");
 
 importScripts(
-  "/depositCalculator/precache-manifest.2306c8d050dd4c093f17ed3a08bc5735.js"
+  "/depositCalculator/precache-manifest.21ec97179c878d69496fb729bb98010a.js"
 );
 
 self.addEventListener('message', (event) => {
